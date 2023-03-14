@@ -30,7 +30,12 @@ intializeDbAndServer();
 app.post("/register", async (request, response) => {
   const { username, name, password, gender, location } = request.body;
   const hashedPassword = await bcrypt.hash(password, 10);
-  const userDetails = `
+  const passwordLength = password.length;
+  if (passwordLength < 5) {
+    response.status(400);
+    response.send("Password is too short");
+  } else {
+    const userDetails = `
     SELECT 
         *
     FROM 
@@ -38,24 +43,90 @@ app.post("/register", async (request, response) => {
     WHERE 
         username = '${username}'; 
   `;
-  const userResponse = await db.get(userDetails);
+    const userResponse = await db.get(userDetails);
 
-  if (userResponse === undefined) {
-    const creatNewUser = `
+    if (userResponse === undefined) {
+      const creatNewUser = `
         INSERT INTO 
             user(username, name, password, gender, location)
         VALUES(
             '${username}',
             '${name}',
-            '${password}',
+            '${hashedPassword}',
             '${gender}',
             '${location}'
         );
       `;
-    await db.run(creatNewUser);
-    response.send("User created successfully");
-  } else {
-    response.status(401);
-    response.send("User already exist");
+      await db.run(creatNewUser);
+      response.send("User created successfully");
+    } else {
+      response.status(401);
+      response.send("User already exist");
+    }
   }
 });
+
+// POST Method
+app.post("/login", async (request, response) => {
+  const { username, password } = request.body;
+  const getUserName = `
+        SELECT 
+            *
+        FROM 
+            user
+        WHERE 
+            username = '${username}';
+    `;
+  const userDetails = await db.get(getUserName);
+
+  if (userDetails === undefined) {
+    response.status(400);
+    response.send("Invalid user");
+  } else {
+    const comparedPassword = await bcrypt.compare(
+      userDetails.password,
+      password
+    );
+    if (comparedPassword === true) {
+      response.status(200);
+      response.send("Login success!");
+    } else {
+      response.status(400);
+      response.send("Invalid password");
+    }
+  }
+});
+
+// API 3 PUT Method
+app.put("/change-password", async (request, response) => {
+  const { username, oldPassword, newPassword } = request.body;
+  const getUserDetails = `
+        SELECT 
+            * 
+        FROM 
+            user
+        WHERE 
+            username = '${username}';
+    `;
+  const userDetails = await db.get(getUserDetails);
+
+  const comPassword = bcrypt.compare(oldPassword, userDetails.password);
+
+  if (userDetails === undefined) {
+    response.status(400);
+    response.send("Invalid User");
+  } else {
+    if (newPassword.length < 5) {
+      response.status(400);
+      response.send("Password is too short");
+    } else if (comPassword === false) {
+      response.status(400);
+      response.send("Invalid current password");
+    } else {
+      response.status(200);
+      response.send("Successful password update");
+    }
+  }
+});
+
+module.exports = app;
