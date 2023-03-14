@@ -4,7 +4,7 @@ Content-Type: application/json
 {
   "username": "adam_richard",
   "name": "Adam Richard",
-  "password": "ricard_567",
+  "password": "richard_567",
   "gender": "male",
   "location": "Detroit"
 }
@@ -15,7 +15,7 @@ Content-Type: application/json
 
 {
   "username": "adam_richard",
-  "password": "ricard_567"
+  "password": "richard_567"
 }
 
 ###
@@ -24,6 +24,6 @@ Content-Type: application/json
 
 {
   "username": "adam_richard",
-  "oldPassword": "ricaksjklcijcv",
+  "oldPassword": "richard_567",
   "newPassword": "richard@123"
 }
